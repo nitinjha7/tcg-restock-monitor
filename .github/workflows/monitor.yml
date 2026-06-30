@@ -1,26 +1,36 @@
 name: tcg-monitor
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
+  schedule:
+    # Safety-net restart every 6h in case the self-redispatch chain ever breaks.
+    - cron: "0 */6 * * *"
 permissions:
-  contents: write
+  contents: write   # commit state.json back
+  actions: write    # re-dispatch the next run
+concurrency:
+  # Only ever one monitor running; new triggers queue instead of overlapping.
+  group: tcg-monitor
+  cancel-in-progress: false
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 355   # exit before GitHub's hard 6h cap
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install -r requirements.txt
-      - run: python monitor.py
-        env:
-          DISCORD_WEBHOOK_LIVE: ${{ secrets.DISCORD_WEBHOOK_LIVE }}
-          DISCORD_WEBHOOK_FREE: ${{ secrets.DISCORD_WEBHOOK_FREE }}
-      - name: commit state
+      - name: configure git
         run: |
           git config user.name "tcg-monitor"
           git config user.email "bot@local"
-          git add state.json
-          git diff --quiet --cached || git commit -m "update state [skip ci]"
-          git push
+      - name: run monitor loop
+        run: python monitor.py --loop
+        env:
+          DISCORD_WEBHOOK_LIVE: ${{ secrets.DISCORD_WEBHOOK_LIVE }}
+          DISCORD_WEBHOOK_FREE: ${{ secrets.DISCORD_WEBHOOK_FREE }}
+      - name: re-dispatch next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run monitor.yml

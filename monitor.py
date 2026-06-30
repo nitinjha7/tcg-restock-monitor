@@ -1,6 +1,8 @@
 import json
 import os
+import sys
 import time
+import subprocess
 import httpx
 from datetime import datetime, timezone, timedelta
 
@@ -13,6 +15,11 @@ DELAY_HOURS = 24
 MAX_PAGES = 3
 STORE_DELAY_SECS = 1.5
 USER_AGENT = "Mozilla/5.0 (compatible; TCGMonitor/1.0)"
+
+# --loop mode (free always-on polling on a public GitHub repo)
+POLL_INTERVAL_SECS = 60          # gap between full polling cycles
+COMMIT_INTERVAL_SECS = 20 * 60   # how often to commit state.json back to the repo
+LOOP_MAX_SECONDS = 350 * 60      # exit cleanly before GitHub's 6h job cap, then re-dispatch
 
 WATCH_GAMES = [
     "one piece", "lorcana", "pokemon", "pokémon", "riftbound",
@@ -133,30 +140,55 @@ def is_sealed(product: dict) -> bool:
 # Fetch
 # ---------------------------------------------------------------------------
 
-def fetch_store(domain: str) -> list[dict]:
-    products = []
+def _fetch_feed(client: httpx.Client, base_url: str, label: str) -> list[dict]:
+    """Paginate a Shopify products.json feed (root or per-collection)."""
     headers = {"User-Agent": USER_AGENT}
-    with httpx.Client(timeout=15.0, follow_redirects=True) as client:
-        for page in range(1, MAX_PAGES + 1):
-            url = f"https://{domain}/products.json?limit=250&page={page}"
-            try:
-                resp = client.get(url, headers=headers)
-            except Exception as exc:
-                print(f"  [WARN] {domain} page {page}: {exc}")
-                break
-            if resp.status_code != 200:
-                print(f"  [WARN] {domain} page {page}: HTTP {resp.status_code}")
-                break
-            try:
-                data = resp.json()
-            except Exception:
-                print(f"  [WARN] {domain} page {page}: invalid JSON")
-                break
-            page_products = data.get("products", [])
-            products.extend(page_products)
-            if len(page_products) < 250:
-                break
+    products = []
+    for page in range(1, MAX_PAGES + 1):
+        url = f"{base_url}?limit=250&page={page}"
+        try:
+            resp = client.get(url, headers=headers)
+        except Exception as exc:
+            print(f"  [WARN] {label} page {page}: {exc}")
+            break
+        if resp.status_code != 200:
+            print(f"  [WARN] {label} page {page}: HTTP {resp.status_code}")
+            break
+        try:
+            data = resp.json()
+        except Exception:
+            print(f"  [WARN] {label} page {page}: invalid JSON")
+            break
+        page_products = data.get("products", [])
+        products.extend(page_products)
+        if len(page_products) < 250:
+            break
     return products
+
+
+def fetch_store(store: dict) -> list[dict]:
+    """Fetch a store's products.
+
+    If the store config lists `collections`, fetch each collection feed and
+    dedupe by product id (a product can appear in several collections). This
+    is how big general retailers (singles/board-games sorted first) expose
+    their sealed stock without us paging past the cap. Otherwise fall back to
+    the root /products.json feed.
+    """
+    domain = store["domain"]
+    collections = store.get("collections")
+    with httpx.Client(timeout=15.0, follow_redirects=True) as client:
+        if collections:
+            products = []
+            seen_ids = set()
+            for handle in collections:
+                base = f"https://{domain}/collections/{handle}/products.json"
+                for p in _fetch_feed(client, base, f"{domain}/{handle}"):
+                    if p["id"] not in seen_ids:
+                        seen_ids.add(p["id"])
+                        products.append(p)
+            return products
+        return _fetch_feed(client, f"https://{domain}/products.json", domain)
 
 
 # ---------------------------------------------------------------------------
@@ -355,39 +387,50 @@ def build_startup_embed(total_sealed: int, num_stores: int) -> dict:
 # Main
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    with open("stores.json", "r", encoding="utf-8") as f:
-        stores = json.load(f)
+def commit_state() -> None:
+    """Commit state.json back to the repo. No-op outside GitHub Actions."""
+    if not os.environ.get("GITHUB_ACTIONS"):
+        return
+    try:
+        subprocess.run(["git", "add", STATE_FILE], check=True)
+        if subprocess.run(["git", "diff", "--cached", "--quiet"]).returncode != 0:
+            subprocess.run(["git", "commit", "-m", "update state [skip ci]"], check=True)
+            subprocess.run(["git", "push"], check=True)
+            print("  state committed")
+    except Exception as exc:
+        print(f"  [WARN] git commit failed: {exc}")
 
-    state = load_state()
+
+def run_once(stores: list, state: dict, known_ids: set,
+             live_url: str, free_url: str) -> tuple[int, int]:
+    """One full polling cycle: fetch all stores, detect events, alert, save.
+
+    Returns (events_emitted, total_sealed). On the first cycle (empty state)
+    it only populates state and sends a single "online" message — alerts begin
+    from the second cycle to avoid a flood.
+    """
     first_run = not state["products"]
-    known_ids: set = set(state["known_product_ids"])
-
     all_events: list[dict] = []
     total_sealed = 0
 
     for i, store in enumerate(stores):
         name = store["name"]
-        domain = store["domain"]
         if i > 0:
             time.sleep(STORE_DELAY_SECS)
-        print(f"Fetching {name} ({domain})...")
+        print(f"Fetching {name} ({store['domain']})...")
         try:
-            products = fetch_store(domain)
+            products = fetch_store(store)
             sealed = [p for p in products if is_sealed(p)]
             total_sealed += len(sealed)
             print(f"  {len(products)} products fetched, {len(sealed)} sealed kept")
             events = detect_events(
-                domain, name, sealed, state, known_ids, emit=not first_run
+                store["domain"], name, sealed, state, known_ids, emit=not first_run
             )
             all_events.extend(events)
         except Exception as exc:
             print(f"  [ERROR] {name}: {exc}")
 
     state["known_product_ids"] = list(known_ids)
-
-    live_url = os.environ.get("DISCORD_WEBHOOK_LIVE", "")
-    free_url = os.environ.get("DISCORD_WEBHOOK_FREE", "")
 
     if first_run:
         print(f"\nFirst run — tracking {total_sealed} sealed products across {len(stores)} stores.")
@@ -397,8 +440,7 @@ def main() -> None:
         print(f"\n{len(all_events)} event(s) detected.")
         for event in all_events:
             embed = build_embed(event)
-            etype = event["type"]
-            print(f"  [{etype}] {event['title']} @ {event['store_name']}")
+            print(f"  [{event['type']}] {event['title']} @ {event['store_name']}")
             if live_url:
                 send_to_webhook(live_url, embed)
             if free_url:
@@ -408,7 +450,46 @@ def main() -> None:
         release_due_alerts(state, free_url)
 
     save_state(state)
-    print(f"State saved. {total_sealed} sealed products tracked across {len(stores)} stores.")
+    return len(all_events), total_sealed
+
+
+def main() -> None:
+    loop_mode = "--loop" in sys.argv
+
+    with open("stores.json", "r", encoding="utf-8") as f:
+        stores = json.load(f)
+
+    state = load_state()
+    known_ids: set = set(state["known_product_ids"])
+    live_url = os.environ.get("DISCORD_WEBHOOK_LIVE", "")
+    free_url = os.environ.get("DISCORD_WEBHOOK_FREE", "")
+
+    if not loop_mode:
+        events, total = run_once(stores, state, known_ids, live_url, free_url)
+        commit_state()
+        print(f"State saved. {total} sealed products tracked across {len(stores)} stores.")
+        return
+
+    # Always-on loop: poll continuously, commit periodically, then exit before
+    # the 6h job cap so the workflow can re-dispatch a fresh job.
+    print(f"Loop mode: polling every ~{POLL_INTERVAL_SECS}s for up to {LOOP_MAX_SECONDS // 60} min.")
+    start = time.time()
+    last_commit = 0.0
+    cycle = 0
+    while time.time() - start < LOOP_MAX_SECONDS:
+        cycle += 1
+        print(f"\n===== cycle {cycle} @ {datetime.now(timezone.utc).isoformat()} =====")
+        try:
+            run_once(stores, state, known_ids, live_url, free_url)
+        except Exception as exc:
+            print(f"[ERROR] cycle failed: {exc}")
+        if time.time() - last_commit > COMMIT_INTERVAL_SECS:
+            commit_state()
+            last_commit = time.time()
+        time.sleep(POLL_INTERVAL_SECS)
+
+    commit_state()  # final snapshot before handing off to the next job
+    print("Loop window elapsed — exiting for re-dispatch.")
 
 
 if __name__ == "__main__":

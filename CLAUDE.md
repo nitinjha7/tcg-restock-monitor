@@ -4,15 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A 24/7 TCG sealed-product restock monitor that polls Shopify stores and fires Discord alerts. Runs free on GitHub Actions (every 5 minutes). State persists between runs via `state.json` committed back to the repo.
+A 24/7 TCG sealed-product restock monitor that polls Shopify stores and fires Discord alerts. Runs free on GitHub Actions. State persists between runs via `state.json` committed back to the repo.
 
-Full specification is in `BUILD_SPEC.md` — read it before making changes.
+Full specification is in `BUILD_SPEC.md`; growth/monetization strategy is in `STRATEGY.md`. Read `BUILD_SPEC.md` before changing core logic.
 
 ## Tech Stack
 
 - **Python 3.11**, stdlib + `httpx` only (no other deps)
-- **GitHub Actions** for scheduling (`*/5 * * * *`)
+- **GitHub Actions** as a free always-on host (see Run Modes below)
 - **Discord webhooks** for alerts (two tiers: live and 24h-delayed free)
+
+## Run Modes
+
+`monitor.py` has two modes:
+- **Single run** (`python monitor.py`) — one fetch/diff/alert cycle, commits state, exits. Used for local testing and manual runs.
+- **Loop** (`python monitor.py --loop`) — polls every ~60s continuously for ~5h50m, committing state every 20 min, then exits so the workflow re-dispatches a fresh job. This is the production mode: it gives near-real-time polling **for free** by exploiting unlimited Actions minutes on a **public** repo (private repos only get 2,000 min/month — the repo MUST be public for this).
+
+The workflow (`.github/workflows/monitor.yml`) self-perpetuates: each job runs the loop, then re-dispatches itself via `gh workflow run`. A 6h `schedule` cron + a `concurrency` group are the safety net (restart if the chain breaks; never run two at once). `commit_state()` is a no-op outside Actions (gated on `$GITHUB_ACTIONS`).
 
 ## Planned File Structure
 
@@ -91,8 +99,12 @@ On every run: fire immediate alerts → enqueue 24h-delayed copies → release a
 - **Null-field caveat:** Shopify feeds can return explicit `null` for fields like `body_html`,
   so `dict.get(key, "")` returns `None` (not `""`). Use the `_field()` helper in `monitor.py`
   for any product field that gets `.lower()`-ed.
-- **Pagination caveat:** Total Cards sorts singles first; its sealed boxes fall past page 3, so
-  it yields ~0 kept products under the 3-page cap. This is the spec's speed tradeoff, not a bug.
+- **Collection targeting:** A store config may include `"collections": ["handle", ...]`. When
+  present, `fetch_store` pulls `/collections/{handle}/products.json` (deduped by product id)
+  instead of the root feed. This is how big general retailers (Total Cards, 401 Games, Infinity
+  Collectables) expose sealed stock — their root feed sorts singles/board-games first, pushing
+  TCG sealed past the 3-page cap and yielding ~0. A non-existent collection handle returns HTTP
+  200 with an empty `products` array (not a 404), so verify handles by checking the count is > 0.
 
 ### Product Filter (must pass ALL)
 

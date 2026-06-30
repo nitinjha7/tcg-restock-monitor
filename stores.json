@@ -1,10 +1,16 @@
 [
-  {"name": "Total Cards",        "domain": "totalcards.net"},
+  {"name": "Total Cards",        "domain": "totalcards.net", "collections": ["pokemon-booster-boxes", "one-piece", "lorcana"]},
   {"name": "Otakura",            "domain": "otakura.com"},
   {"name": "Ripperholics",       "domain": "ripperholics.com"},
   {"name": "Undiscovered Realm", "domain": "undiscoveredrealm.com"},
   {"name": "Pack Fresh",         "domain": "pack-fresh.com"},
   {"name": "Skybox CT",          "domain": "skyboxct.com"},
   {"name": "Flipside Gaming",    "domain": "flipsidegaming.com"},
-  {"name": "Stomping Grounds",   "domain": "stompinggroundstcg.com"}
+  {"name": "Stomping Grounds",   "domain": "stompinggroundstcg.com"},
+  {"name": "The Card Vault",     "domain": "thecardvault.co.uk"},
+  {"name": "Buy Any Cards",      "domain": "buyanycards.co.uk"},
+  {"name": "Elemental Cards",    "domain": "elemental.cards"},
+  {"name": "Japan2UK",           "domain": "www.japan2uk.com"},
+  {"name": "401 Games",          "domain": "store.401games.ca", "collections": ["pokemon-sealed-product"]},
+  {"name": "Infinity Collectables","domain": "infinitycollectables.com", "collections": ["pokemon-tcg"]}
 ]
