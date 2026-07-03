@@ -5,12 +5,14 @@ import time
 import subprocess
 import httpx
 from datetime import datetime, timezone, timedelta
+from urllib.parse import quote
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
 MIN_PRICE = 15.0
+MIN_DROP_PCT = 5.0               # only alert price drops of at least this % (cuts noise)
 DELAY_HOURS = 24
 MAX_PAGES = 3
 STORE_DELAY_SECS = 1.5
@@ -20,6 +22,25 @@ USER_AGENT = "Mozilla/5.0 (compatible; TCGMonitor/1.0)"
 POLL_INTERVAL_SECS = 60          # gap between full polling cycles
 COMMIT_INTERVAL_SECS = 20 * 60   # how often to commit state.json back to the repo
 LOOP_MAX_SECONDS = 350 * 60      # exit cleanly before GitHub's 6h job cap, then re-dispatch
+
+# Alerting
+COOLDOWN_HOURS = 6               # suppress repeat alerts for the same product+event
+ALERT_SEND_GAP_SECS = 0.4        # spacing between Discord sends (limit is ~30/min/webhook)
+
+CURRENCY_SYMBOLS = {"GBP": "£", "USD": "$", "EUR": "€", "CAD": "CA$", "AUD": "A$"}
+
+# (keywords-to-match, display label, emoji) for the game tag shown in alerts.
+GAME_TAGS = [
+    (("pokemon", "pokémon"), "Pokémon", "⚡"),
+    (("one piece",), "One Piece", "🏴‍☠️"),
+    (("lorcana",), "Lorcana", "✨"),
+    (("yu-gi-oh", "yugioh"), "Yu-Gi-Oh!", "🃏"),
+    (("gundam",), "Gundam", "🤖"),
+    (("riftbound",), "Riftbound", "🌀"),
+    (("union arena",), "Union Arena", "⚔️"),
+    (("digimon",), "Digimon", "🦖"),
+    (("magic", "mtg"), "Magic", "🧙"),
+]
 
 WATCH_GAMES = [
     "one piece", "lorcana", "pokemon", "pokémon", "riftbound",
@@ -46,6 +67,7 @@ EXCLUDE_TITLE_FRAGMENTS = [
     "astra militarum", "battleforce", "dragon shield", "ultra pro",
     "deck box", "playmat", "sleeve",
     "event entry", "draft entry", "event reservation", "tournament",
+    "damaged", "[damaged]",
 ]
 
 EXCLUDE_VENDORS = {
@@ -196,7 +218,7 @@ def fetch_store(store: dict) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 STATE_FILE = "state.json"
-_DEFAULT_STATE = {"products": {}, "delayed_queue": [], "known_product_ids": []}
+_DEFAULT_STATE = {"products": {}, "delayed_queue": [], "known_product_ids": [], "alert_cooldowns": {}}
 
 
 def load_state() -> dict:
@@ -220,6 +242,20 @@ def save_state(state: dict) -> None:
 # Event detection
 # ---------------------------------------------------------------------------
 
+def _alert_allowed(cooldowns: dict, cdk: str, now: datetime, delta: timedelta) -> bool:
+    """True if this product+event hasn't been alerted within the cooldown window.
+
+    Guards against spam when a store's feed flaps availability under fast polling.
+    """
+    last = cooldowns.get(cdk)
+    if not last:
+        return True
+    try:
+        return datetime.fromisoformat(last) <= now - delta
+    except Exception:
+        return True
+
+
 def detect_events(
     domain: str,
     store_name: str,
@@ -229,7 +265,10 @@ def detect_events(
     emit: bool = True,
 ) -> list[dict]:
     events = []
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    cooldown_delta = timedelta(hours=COOLDOWN_HOURS)
+    cooldowns = state["alert_cooldowns"]
     state_products = state["products"]
 
     for product in products:
@@ -259,23 +298,30 @@ def detect_events(
                 "store_name": store_name,
                 "title": display_title,
                 "handle": handle,
+                "variant_id": variant_id,
                 "price": price,
                 "image_url": image_url,
                 "available": available,
             }
 
+            def _emit(etype: str, **extra) -> None:
+                cdk = f"{key}::{etype}"
+                if _alert_allowed(cooldowns, cdk, now, cooldown_delta):
+                    events.append({**base_event, "type": etype, **extra})
+                    cooldowns[cdk] = now_iso
+
             if key not in state_products and product_key not in known_ids:
                 if emit and available and is_preorder(product):
-                    events.append({**base_event, "type": "NEW_PREORDER"})
+                    _emit("NEW_PREORDER")
             elif key in state_products:
                 prev = state_products[key]
                 prev_available = prev.get("available", True)
                 prev_price = float(prev.get("price", price))
 
                 if emit and not prev_available and available:
-                    events.append({**base_event, "type": "RESTOCK"})
-                elif emit and price < prev_price * 0.95 and price > 0:
-                    events.append({**base_event, "type": "PRICE_DROP", "old_price": prev_price})
+                    _emit("RESTOCK")
+                elif emit and price > 0 and price <= prev_price * (1 - MIN_DROP_PCT / 100):
+                    _emit("PRICE_DROP", old_price=prev_price)
 
             state_products[key] = {
                 "available": available,
@@ -289,6 +335,43 @@ def detect_events(
 
 
 # ---------------------------------------------------------------------------
+# Affiliate links
+# ---------------------------------------------------------------------------
+
+# Populated from stores.json in main(): {domain: url_template}. A template is a
+# string containing "{url}" (raw product URL) and/or "{url_enc}" (URL-encoded),
+# e.g. "{url}?ref=MYID" for an in-house program, or an Awin/Refersion deeplink
+# like "https://www.awin1.com/cread.php?awinmid=123&awinaffid=456&ued={url_enc}".
+_AFFILIATE_TEMPLATES: dict[str, str] = {}
+
+
+def affiliate_url(domain: str, product_url: str) -> str:
+    """Wrap a product URL with the store's affiliate template, if configured."""
+    template = _AFFILIATE_TEMPLATES.get(domain)
+    if not template:
+        return product_url
+    return template.replace("{url_enc}", quote(product_url, safe="")).replace("{url}", product_url)
+
+
+# Populated from stores.json in main(): {domain: ISO currency code}.
+_STORE_CURRENCY: dict[str, str] = {}
+
+
+def format_price(domain: str, amount: float) -> str:
+    code = _STORE_CURRENCY.get(domain, "USD")
+    return f"{CURRENCY_SYMBOLS.get(code, '')}{amount:.2f}"
+
+
+def detect_game(title: str) -> tuple[str, str]:
+    """Return (label, emoji) for the game a product belongs to, or ('', '')."""
+    low = title.lower()
+    for keywords, label, emoji in GAME_TAGS:
+        if any(kw in low for kw in keywords):
+            return label, emoji
+    return "", ""
+
+
+# ---------------------------------------------------------------------------
 # Discord
 # ---------------------------------------------------------------------------
 
@@ -298,28 +381,40 @@ def build_embed(event: dict) -> dict:
     label = DISCORD_LABELS[etype]
     color = DISCORD_COLORS[etype]
     domain = event["domain"]
-    handle = event["handle"]
     price = event["price"]
 
-    url = f"https://{domain}/products/{handle}"
+    product_url = affiliate_url(domain, f"https://{domain}/products/{event['handle']}")
+    # Shopify cart permalink: adds the exact variant to cart in one click.
+    atc_url = affiliate_url(domain, f"https://{domain}/cart/{event['variant_id']}:1")
 
     if etype == "PRICE_DROP":
-        price_field = f"${price:.2f} (Was ${event['old_price']:.2f})"
+        old = event["old_price"]
+        pct = round((1 - price / old) * 100) if old else 0
+        price_field = f"**{format_price(domain, price)}**  ~~{format_price(domain, old)}~~  (−{pct}%)"
     else:
-        price_field = f"${price:.2f}"
+        price_field = f"**{format_price(domain, price)}**"
 
-    status = "Preorder" if etype == "NEW_PREORDER" else "In stock"
+    title_low = event["title"].lower()
+    is_preorder = etype == "NEW_PREORDER" or "pre-order" in title_low or "preorder" in title_low
+    status = "🔵 Preorder" if is_preorder else "🟢 In stock"
+
+    game_label, game_emoji = detect_game(event["title"])
+    desc_lines = []
+    if game_label:
+        desc_lines.append(f"{game_emoji} **{game_label}**")
+    desc_lines.append(f"🛒 **[Add to cart instantly]({atc_url})**")
 
     embed: dict = {
-        "title": f"{emoji} {label}: {event['title']}",
-        "url": url,
+        "author": {"name": event["store_name"]},
+        "title": f"{emoji} {label}: {event['title']}"[:256],
+        "url": product_url,
+        "description": "\n".join(desc_lines),
         "color": color,
         "fields": [
-            {"name": "Store", "value": event["store_name"], "inline": True},
             {"name": "Price", "value": price_field, "inline": True},
             {"name": "Status", "value": status, "inline": True},
         ],
-        "footer": {"text": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
     if event.get("image_url"):
@@ -328,16 +423,28 @@ def build_embed(event: dict) -> dict:
     return embed
 
 
-def send_to_webhook(url: str, embed: dict) -> bool:
-    try:
-        resp = httpx.post(url, json={"embeds": [embed]}, timeout=10.0)
+def send_to_webhook(url: str, embed: dict, retries: int = 3) -> bool:
+    """POST an embed, honoring Discord's 429 rate-limit (Retry-After)."""
+    for _ in range(retries):
+        try:
+            resp = httpx.post(url, json={"embeds": [embed]}, timeout=10.0)
+        except Exception as exc:
+            print(f"  [WARN] Discord webhook error: {exc}")
+            return False
         if resp.status_code in (200, 204):
             return True
+        if resp.status_code == 429:
+            try:
+                retry_after = float(resp.json().get("retry_after", 1.0))
+            except Exception:
+                retry_after = 1.0
+            retry_after = min(max(retry_after, 0.5), 10.0)
+            print(f"  [WARN] rate limited, retrying in {retry_after:.1f}s")
+            time.sleep(retry_after + 0.1)
+            continue
         print(f"  [WARN] Discord webhook returned {resp.status_code}")
         return False
-    except Exception as exc:
-        print(f"  [WARN] Discord webhook error: {exc}")
-        return False
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +508,19 @@ def commit_state() -> None:
         print(f"  [WARN] git commit failed: {exc}")
 
 
+def prune_cooldowns(state: dict) -> None:
+    """Drop expired cooldown entries so state.json doesn't grow unbounded."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=COOLDOWN_HOURS)
+    kept = {}
+    for cdk, ts in state["alert_cooldowns"].items():
+        try:
+            if datetime.fromisoformat(ts) > cutoff:
+                kept[cdk] = ts
+        except Exception:
+            pass
+    state["alert_cooldowns"] = kept
+
+
 def run_once(stores: list, state: dict, known_ids: set,
              live_url: str, free_url: str) -> tuple[int, int]:
     """One full polling cycle: fetch all stores, detect events, alert, save.
@@ -445,10 +565,13 @@ def run_once(stores: list, state: dict, known_ids: set,
                 send_to_webhook(live_url, embed)
             if free_url:
                 enqueue_alert(state, embed)
+            if live_url and len(all_events) > 1:
+                time.sleep(ALERT_SEND_GAP_SECS)
 
     if free_url:
         release_due_alerts(state, free_url)
 
+    prune_cooldowns(state)
     save_state(state)
     return len(all_events), total_sealed
 
@@ -458,6 +581,12 @@ def main() -> None:
 
     with open("stores.json", "r", encoding="utf-8") as f:
         stores = json.load(f)
+
+    for store in stores:
+        if store.get("affiliate"):
+            _AFFILIATE_TEMPLATES[store["domain"]] = store["affiliate"]
+        if store.get("currency"):
+            _STORE_CURRENCY[store["domain"]] = store["currency"]
 
     state = load_state()
     known_ids: set = set(state["known_product_ids"])
