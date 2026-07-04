@@ -5,12 +5,12 @@
   {"name": "Undiscovered Realm", "domain": "undiscoveredrealm.com", "currency": "USD"},
   {"name": "Pack Fresh",         "domain": "pack-fresh.com", "currency": "USD"},
   {"name": "Skybox CT",          "domain": "skyboxct.com", "currency": "USD"},
-  {"name": "Flipside Gaming",    "domain": "flipsidegaming.com", "currency": "USD"},
+  {"name": "Flipside Gaming",    "domain": "flipsidegaming.com", "currency": "USD", "collections": ["lorcana-sealed", "gundam-card-game-booster-boxes-cases-starter-sets-more"]},
   {"name": "Stomping Grounds",   "domain": "stompinggroundstcg.com", "currency": "USD"},
   {"name": "The Card Vault",     "domain": "thecardvault.co.uk", "currency": "GBP"},
   {"name": "Buy Any Cards",      "domain": "buyanycards.co.uk", "currency": "GBP"},
   {"name": "Elemental Cards",    "domain": "elemental.cards", "currency": "GBP"},
-  {"name": "Japan2UK",           "domain": "www.japan2uk.com", "currency": "GBP"},
+  {"name": "Japan2UK",           "domain": "www.japan2uk.com", "currency": "GBP", "collections": ["pokemon-english-booster-boxes", "pokemon-english-elite-trainer-boxes", "pokemon-english-collection-boxes", "pokemon-japanese-booster-boxes", "one-piece-english-booster-boxes", "one-piece-japanese-booster-boxes", "disney-booster-boxes", "gundam-japanese-booster-boxes", "union-arena-japanese-booster-boxes", "yugioh-japanese-booster-boxes"]},
   {"name": "401 Games",          "domain": "store.401games.ca", "currency": "CAD", "collections": ["pokemon-sealed-product"]},
   {"name": "Infinity Collectables","domain": "infinitycollectables.com", "currency": "GBP", "collections": ["pokemon-tcg"]}
 ]
