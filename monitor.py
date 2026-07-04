@@ -2,10 +2,13 @@ import json
 import os
 import sys
 import time
+import html
 import subprocess
 import httpx
 from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
+
+import broadcast
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -90,6 +93,22 @@ DISCORD_LABELS = {
     "NEW_PREORDER": "PREORDER",
     "PRICE_DROP": "PRICE DROP",
 }
+
+# Public-broadcast config (Telegram / X / Bluesky / Mastodon / public Discord).
+# Hashtags per game for organic discovery on X/Bluesky/Mastodon.
+SOCIAL_HASHTAGS = {
+    "Pokémon": ["#PokemonTCG", "#Pokemon"],
+    "One Piece": ["#OnePieceCardGame", "#OPTCG"],
+    "Lorcana": ["#Lorcana", "#DisneyLorcana"],
+    "Yu-Gi-Oh!": ["#YuGiOh"],
+    "Gundam": ["#GundamCardGame"],
+    "Riftbound": ["#Riftbound"],
+    "Union Arena": ["#UnionArena"],
+    "Digimon": ["#DigimonTCG"],
+    "Magic": ["#MTG", "#MTGFinance"],
+}
+# Only restocks/preorders at/above this price go to X (free tier caps ~500/mo).
+X_MIN_PRICE = 30.0
 
 # ---------------------------------------------------------------------------
 # Filter
@@ -423,6 +442,72 @@ def build_embed(event: dict) -> dict:
     return embed
 
 
+def build_broadcast_post(event: dict, embed: dict) -> dict:
+    """Build a channel-agnostic payload for the public broadcast engine.
+
+    Reuses the Discord embed (public feed) and produces per-platform text:
+    HTML for Telegram, plain text for Mastodon, length-fitted variants for
+    X (<=280, URL inline) and Bluesky (<=300, URL rides an external card).
+    """
+    etype = event["type"]
+    label = DISCORD_LABELS[etype]
+    emoji = DISCORD_EMOJIS[etype]
+    domain = event["domain"]
+    price = event["price"]
+    title = event["title"]
+    store = event["store_name"]
+
+    buy_url = affiliate_url(domain, f"https://{domain}/products/{event['handle']}")
+
+    if etype == "PRICE_DROP":
+        old = event.get("old_price") or price
+        pct = round((1 - price / old) * 100) if old else 0
+        money = f"{format_price(domain, price)} (was {format_price(domain, old)}, -{pct}%)"
+    else:
+        money = format_price(domain, price)
+
+    game_label, _ = detect_game(title)
+    tags = list(SOCIAL_HASHTAGS.get(game_label, []))
+    tags.append("#TCG")
+    if etype == "RESTOCK":
+        tags.append("#restock")
+    tagline = " ".join(tags)
+
+    # X: URL counts as 23 chars (t.co). Trim the title so the whole tweet fits.
+    fixed = len(f"{emoji} {label}: \n{money} @ {store}\n \n{tagline}") + 23
+    x_title = title if len(title) <= (280 - fixed) else title[: max(0, 277 - fixed)] + "…"
+    x_text = f"{emoji} {label}: {x_title}\n{money} @ {store}\n{buy_url}\n{tagline}"
+
+    # Bluesky: 300-char headline; the buy URL rides the external card, not text.
+    bsky_head = f"{emoji} {label}: {title}\n{money} @ {store}\n{tagline}"
+    bluesky_text = bsky_head if len(bsky_head) <= 300 else bsky_head[:299] + "…"
+
+    # Mastodon: plain text, generous limit.
+    social_text = f"{emoji} {label}: {title}\n{money} @ {store}\n{buy_url}\n{tagline}"
+
+    # Telegram: HTML with a clean buy button (escape user-supplied strings).
+    telegram_html = (
+        f"{emoji} <b>{html.escape(label)}: {html.escape(title)}</b>\n"
+        f"{html.escape(money)} @ {html.escape(store)}\n"
+        f'<a href="{html.escape(buy_url, quote=True)}">🛒 Buy now</a>\n'
+        f"{tagline}"
+    )
+
+    return {
+        "embed": embed,
+        "image_url": event.get("image_url", ""),
+        "telegram_html": telegram_html,
+        "social_text": social_text,
+        "x_text": x_text,
+        "bluesky_text": bluesky_text,
+        "buy_url": buy_url,
+        "money": money,
+        "store": store,
+        "title": title,
+        "priority": etype in ("RESTOCK", "NEW_PREORDER") and price >= X_MIN_PRICE,
+    }
+
+
 def send_to_webhook(url: str, embed: dict, retries: int = 3) -> bool:
     """POST an embed, honoring Discord's 429 rate-limit (Retry-After)."""
     for _ in range(retries):
@@ -565,7 +650,9 @@ def run_once(stores: list, state: dict, known_ids: set,
                 send_to_webhook(live_url, embed)
             if free_url:
                 enqueue_alert(state, embed)
-            if live_url and len(all_events) > 1:
+            # Fan out live to every configured public channel (grows the audience).
+            broadcast.broadcast_all(build_broadcast_post(event, embed))
+            if len(all_events) > 1:
                 time.sleep(ALERT_SEND_GAP_SECS)
 
     if free_url:
@@ -592,6 +679,9 @@ def main() -> None:
     known_ids: set = set(state["known_product_ids"])
     live_url = os.environ.get("DISCORD_WEBHOOK_LIVE", "")
     free_url = os.environ.get("DISCORD_WEBHOOK_FREE", "")
+
+    channels = broadcast.configured_channels()
+    print(f"Broadcast channels active: {', '.join(channels) if channels else '(none configured)'}")
 
     if not loop_mode:
         events, total = run_once(stores, state, known_ids, live_url, free_url)
