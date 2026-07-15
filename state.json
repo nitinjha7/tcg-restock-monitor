@@ -11181,62 +11181,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-15T14:59:11.728187+00:00",
-      "payload": {
-        "author": {
-          "name": "Total Cards"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: Pokemon - Chasing Glory Together - Simplified Chinese Standard Booster Box",
-        "url": "https://totalcards.net/products/pokemon-chasing-glory-together-simplified-chinese-standard-booster-box",
-        "description": "\u26a1 **Pok\u00e9mon**\n\ud83d\uded2 **[Add to cart instantly](https://totalcards.net/cart/58336962314621:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**\u00a328.95**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-14T14:59:11.326395+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0553/8178/6724/files/Pokemon-Simplified-Chinese-Chasing-Glory-Together-booster-box-jumbo-deluxe-fat.webp?v=1782870786"
-        }
-      }
-    },
-    {
-      "release_at": "2026-07-15T15:00:52.208078+00:00",
-      "payload": {
-        "author": {
-          "name": "Total Cards"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: Pokemon - Chasing Glory Together - Simplified Chinese - Jumbo Booster Box",
-        "url": "https://totalcards.net/products/pokemon-chasing-glory-together-simplified-chinese-jumbo-booster-box",
-        "description": "\u26a1 **Pok\u00e9mon**\n\ud83d\uded2 **[Add to cart instantly](https://totalcards.net/cart/58336966803837:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**\u00a358.95**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-14T15:00:51.718827+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0553/8178/6724/files/Pokemon-Simplified-Chinese-Chasing-Glory-Together-jumb0-booster-box.webp?v=1782871229"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-15T15:33:11.510194+00:00",
       "payload": {
         "author": {
