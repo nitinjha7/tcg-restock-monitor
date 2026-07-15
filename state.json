@@ -11181,34 +11181,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-15T11:00:59.838721+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: Unova Mini Tin [Volcarona & Emolga]",
-        "url": "https://pack-fresh.com/products/unova-mini-tin-volcarona-emolga",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/49929824895196:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$27.25**  ~~$39.75~~  (\u221231%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-14T11:00:59.661749+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/unova-mini-tin-volcarona-emolga_2608db70-4292-4369-8945-c56fc8c8e750.png?v=1776120038"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-15T11:12:00.905389+00:00",
       "payload": {
         "author": {
