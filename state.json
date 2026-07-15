@@ -11181,34 +11181,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-15T11:44:58.052390+00:00",
-      "payload": {
-        "author": {
-          "name": "Undiscovered Realm"
-        },
-        "title": "\ud83c\udd95 PREORDER: Disney Lorcana: Attack of the Vine! Booster Box",
-        "url": "https://undiscoveredrealm.com/products/disney-lorcana-attack-of-the-vine-booster-box",
-        "description": "\u2728 **Lorcana**\n\ud83d\uded2 **[Add to cart instantly](https://undiscoveredrealm.com/cart/47358716936276:1)**",
-        "color": 3388901,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$219.99**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udd35 Preorder",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-14T11:44:57.853783+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0269/1307/9380/files/Disney_Lorcana_Attack_of_the_Vine_Booster_Box.jpg?v=1784029399"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-15T14:59:11.728187+00:00",
       "payload": {
         "author": {
