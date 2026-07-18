@@ -11211,34 +11211,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-18T23:22:59.164031+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: Chaos Rising Booster Box",
-        "url": "https://pack-fresh.com/products/chaos-rising-booster-box",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/48522888085724:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$186.25**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-17T23:22:58.993772+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/ChaosRisingBoosterBox_1.png?v=1774878903"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-19T04:10:23.404464+00:00",
       "payload": {
         "author": {
