@@ -11209,64 +11209,7 @@
       "last_seen": "2026-07-18T21:41:47.226839+00:00"
     }
   },
-  "delayed_queue": [
-    {
-      "release_at": "2026-07-19T14:22:09.090692+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: Pitch Black 3 Pack Blister [Binacle]",
-        "url": "https://pack-fresh.com/products/pitch-black-3-pack-blister-binacle",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/51105516945628:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$23.49**  ~~$29.49~~  (\u221220%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-18T14:22:08.570668+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/pitch-black-3-pack-blister-binacle_7555fa28-c8c2-4c61-a444-b6b4e04775b1.png?v=1781144623"
-        }
-      }
-    },
-    {
-      "release_at": "2026-07-19T14:23:43.529350+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: Trick or Trade BOOster Bundle (40 ct)",
-        "url": "https://pack-fresh.com/products/trick-or-trade-booster-bundle-40-ct",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/52032368541916:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$63.75**  ~~$69.75~~  (\u22129%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-18T14:23:43.295405+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/trick-or-trade-booster-bundle-40-ct_2589555a-324d-4b85-8c19-cb1a961339de.png?v=1783791276"
-        }
-      }
-    }
-  ],
+  "delayed_queue": [],
   "known_product_ids": [
     "thecardvault.co.uk::9289087549678",
     "pack-fresh.com::9391741305052",
