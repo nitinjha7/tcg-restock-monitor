@@ -13232,7 +13232,5 @@
     "thecardvault.co.uk::9167551299822",
     "www.japan2uk.com::8258745336054"
   ],
-  "alert_cooldowns": {
-    "ripperholics.com::15917909279093::57323695898997::PRICE_DROP": "2026-07-20T12:09:11.687428+00:00"
-  }
+  "alert_cooldowns": {}
 }
