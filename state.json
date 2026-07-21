@@ -11271,34 +11271,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-21T22:06:13.701923+00:00",
-      "payload": {
-        "author": {
-          "name": "Stomping Grounds"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: Mega Evolution: Chaos Rising - 3-Pack Blister [Charmeleon]",
-        "url": "https://stompinggroundstcg.com/products/mega-evolution-chaos-rising-3-pack-blister-charmeleon",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://stompinggroundstcg.com/cart/56948562231456:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$20.00**  ~~$33.00~~  (\u221239%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-20T22:06:13.424231+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0592/1606/8768/files/ChaosRising3-PackBlisterCharmeleon.webp?v=1776887710"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-22T08:34:04.624571+00:00",
       "payload": {
         "author": {
