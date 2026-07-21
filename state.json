@@ -13253,7 +13253,5 @@
     "www.japan2uk.com::8784466084086",
     "undiscoveredrealm.com::10251628937300"
   ],
-  "alert_cooldowns": {
-    "pack-fresh.com::9503765594332::52032368541916::PRICE_DROP": "2026-07-21T13:37:02.665449+00:00"
-  }
+  "alert_cooldowns": {}
 }
