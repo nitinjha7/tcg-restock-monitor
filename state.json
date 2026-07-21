@@ -13253,7 +13253,5 @@
     "store.401games.ca::7812004413627",
     "otakura.com::15893821063502"
   ],
-  "alert_cooldowns": {
-    "stompinggroundstcg.com::15669345419424::56948562231456::PRICE_DROP": "2026-07-20T22:05:58.093168+00:00"
-  }
+  "alert_cooldowns": {}
 }
