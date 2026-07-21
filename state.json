@@ -11271,62 +11271,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-21T20:32:32.182652+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: Paldea Legends Tin [Miraidon ex] (International Version)",
-        "url": "https://pack-fresh.com/products/paldea-legends-tin-miraidon-ex-international-version",
-        "description": "\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/48324860641500:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$124.75**  ~~$154.75~~  (\u221219%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-20T20:32:31.984686+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/PaldeaLegendsTin_Miraidonex_InternationalVersion_e8ff4cdb-23d0-4ce0-82e4-5fc662f422ba.png?v=1780768181"
-        }
-      }
-    },
-    {
-      "release_at": "2026-07-21T20:32:32.810614+00:00",
-      "payload": {
-        "author": {
-          "name": "Buy Any Cards"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: Pokemon TCG Ascended Heroes Elite Trainer Box",
-        "url": "https://buyanycards.co.uk/products/ascended-heroes-elite-trainer-box",
-        "description": "\u26a1 **Pok\u00e9mon**\n\ud83d\uded2 **[Add to cart instantly](https://buyanycards.co.uk/cart/57078676750671:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**\u00a3159.95**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-20T20:32:32.583026+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0980/1662/4975/files/AscendedHeroesEliteTrainerBox_FrontView.jpg?v=1771581936"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-21T22:06:13.701923+00:00",
       "payload": {
         "author": {
