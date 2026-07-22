@@ -11271,34 +11271,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-22T08:34:04.624571+00:00",
-      "payload": {
-        "author": {
-          "name": "Pack Fresh"
-        },
-        "title": "\ud83d\udcb8 PRICE DROP: One Piece English Version 2nd Anniversary Set (Sealed Promotional Bundle)",
-        "url": "https://pack-fresh.com/products/one-piece-english-version-2nd-anniversary-set-sealed-promotional-bundle",
-        "description": "\ud83c\udff4\u200d\u2620\ufe0f **One Piece**\n\ud83d\uded2 **[Add to cart instantly](https://pack-fresh.com/cart/51930056589532:1)**",
-        "color": 16746496,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**$2349.99**  ~~$2499.99~~  (\u22126%)",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-21T08:34:04.338140+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0732/3654/5756/files/one-piece-english-version-2nd-anniversary-set-sealed-promotional-bundle_15622da9-46a1-4625-ba29-5e046016fa63.png?v=1783104141"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-22T13:37:25.085430+00:00",
       "payload": {
         "author": {
