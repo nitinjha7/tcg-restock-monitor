@@ -11379,34 +11379,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-29T12:32:35.721091+00:00",
-      "payload": {
-        "author": {
-          "name": "Total Cards"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: One Piece Card Game - Starter Deck - Green - Roronoa Zoro (ST-32)",
-        "url": "https://totalcards.net/products/one-piece-card-game-starter-deck-green-roronoa-zoro-st-32",
-        "description": "\ud83c\udff4\u200d\u2620\ufe0f **One Piece**\n\ud83d\uded2 **[Add to cart instantly](https://totalcards.net/cart/57539438150013:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**\u00a317.95**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-28T12:32:35.444152+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0553/8178/6724/files/1784365127_75314baf52dc9feaee6b7f9888b6a961.jpg?v=1784365136"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-29T16:34:39.647560+00:00",
       "payload": {
         "author": {
