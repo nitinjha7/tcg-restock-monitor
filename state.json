@@ -13631,8 +13631,5 @@
     "pack-fresh.com::9359500968156",
     "totalcards.net::15799446372733"
   ],
-  "alert_cooldowns": {
-    "flipsidegaming.com::7419335147554::41744685269026::RESTOCK": "2026-07-28T17:46:22.814759+00:00",
-    "flipsidegaming.com::7869231300642::43342810775586::RESTOCK": "2026-07-28T17:46:22.814759+00:00"
-  }
+  "alert_cooldowns": {}
 }
