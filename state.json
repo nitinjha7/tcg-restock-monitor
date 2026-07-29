@@ -11379,34 +11379,6 @@
   },
   "delayed_queue": [
     {
-      "release_at": "2026-07-29T11:55:51.627802+00:00",
-      "payload": {
-        "author": {
-          "name": "Otakura"
-        },
-        "title": "\ud83d\udfe2 RESTOCK: Vendetta Booster Display da 24 Buste \u2013 Riftbound: League of Legends TCG (ENG)",
-        "url": "https://otakura.com/products/vendetta-booster-display-24-buste-riftbound-league-of-legends-tcg-eng",
-        "description": "\ud83c\udf00 **Riftbound**\n\ud83d\uded2 **[Add to cart instantly](https://otakura.com/cart/59306221863246:1)**",
-        "color": 51281,
-        "fields": [
-          {
-            "name": "Price",
-            "value": "**\u20ac139.90**",
-            "inline": true
-          },
-          {
-            "name": "Status",
-            "value": "\ud83d\udfe2 In stock",
-            "inline": true
-          }
-        ],
-        "timestamp": "2026-07-28T11:55:51.329470+00:00",
-        "thumbnail": {
-          "url": "https://cdn.shopify.com/s/files/1/0781/2425/3518/files/Vendetta_Booster_Display_da_24_Buste_Riftbound_League_of_Legends_TCG_ENG.webp?v=1775384824"
-        }
-      }
-    },
-    {
       "release_at": "2026-07-29T12:32:35.721091+00:00",
       "payload": {
         "author": {
