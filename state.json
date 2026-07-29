@@ -8956,7 +8956,7 @@
       "available": false,
       "price": 109.99,
       "title": "Pokemon Brilliant Stars English Build & Battle Stadium Box",
-      "last_seen": "2026-07-28T17:51:00.114638+00:00"
+      "last_seen": "2026-07-29T13:59:21.444958+00:00"
     },
     "www.japan2uk.com::15216406004089::56150420717945": {
       "available": false,
@@ -11150,9 +11150,9 @@
     },
     "www.japan2uk.com::15428015980921::56937145631097": {
       "available": false,
-      "price": 129.99,
+      "price": 119.99,
       "title": "Pokemon Astral Radiance English Build & Battle Stadium Box",
-      "last_seen": "2026-07-28T17:51:00.114638+00:00"
+      "last_seen": "2026-07-29T13:59:21.444958+00:00"
     },
     "pack-fresh.com::9359501492444::50251824431324": {
       "available": true,
@@ -11515,6 +11515,34 @@
         "timestamp": "2026-07-28T17:46:39.036626+00:00",
         "thumbnail": {
           "url": "https://cdn.shopify.com/s/files/1/0128/0782/files/lorcana_set_7_booster_850x850_en.webp?v=1755931700"
+        }
+      }
+    },
+    {
+      "release_at": "2026-07-30T13:59:25.973619+00:00",
+      "payload": {
+        "author": {
+          "name": "Japan2UK"
+        },
+        "title": "\ud83d\udcb8 PRICE DROP: Pokemon Astral Radiance English Build & Battle Stadium Box",
+        "url": "https://www.japan2uk.com/products/pokemon-astral-radiance-english-build-battle-stadium-box",
+        "description": "\u26a1 **Pok\u00e9mon**\n\ud83d\uded2 **[Add to cart instantly](https://www.japan2uk.com/cart/56937145631097:1)**",
+        "color": 16746496,
+        "fields": [
+          {
+            "name": "Price",
+            "value": "**\u00a3119.99**  ~~\u00a3129.99~~  (\u22128%)",
+            "inline": true
+          },
+          {
+            "name": "Status",
+            "value": "\ud83d\udfe2 In stock",
+            "inline": true
+          }
+        ],
+        "timestamp": "2026-07-29T13:59:25.181642+00:00",
+        "thumbnail": {
+          "url": "https://cdn.shopify.com/s/files/1/0498/2122/1019/files/Pokemon_Astral_Radiance_English_Build_Battle_Stadium_Box.png?v=1774888307"
         }
       }
     }
@@ -13379,5 +13407,7 @@
     "store.401games.ca::7941179441339",
     "stompinggroundstcg.com::15097505251488"
   ],
-  "alert_cooldowns": {}
+  "alert_cooldowns": {
+    "www.japan2uk.com::15428015980921::56937145631097::PRICE_DROP": "2026-07-29T13:59:21.444958+00:00"
+  }
 }
