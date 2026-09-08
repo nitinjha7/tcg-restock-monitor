@@ -40,6 +40,7 @@ a{color:inherit}
 .mark{font-weight:800;letter-spacing:-.015em;font-size:19px}
 .mark b{color:var(--signal);font-weight:800}
 .status{margin-left:auto;color:var(--dim);font-size:13px;display:flex;align-items:center;gap:8px}
+.btn-sm{padding:7px 14px;font-size:13.5px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--signal);flex:none}
 
 /* ── hero: the board itself ───────────────────────────── */
@@ -135,6 +136,7 @@ footer{margin-top:clamp(40px,7vw,72px);border-top:1px solid var(--rule);padding:
   <div class="wrap">
     <span class="mark">TCG <b>Stock Board</b></span>
     <span class="status"><span class="dot" id="dot"></span><span id="freshness">loading…</span></span>
+    <a class="btn btn-sm" id="railJoin" href="#">Join free</a>
   </div>
 </header>
 
@@ -198,8 +200,11 @@ footer{margin-top:clamp(40px,7vw,72px);border-top:1px solid var(--rule);padding:
 <script>
 // ─── Fill these in once the channels exist ───────────────────────────────
 const LINKS = {
-  discord:  "",   // e.g. "https://discord.gg/xxxxxxx"
-  telegram: ""    // e.g. "https://t.me/yourchannel"
+  discord:  "https://discord.gg/dCrGMB52BE",  // TCG Alerts -> #free-feed, never expires
+  telegram: ""    // needs a public CHANNEL (e.g. "https://t.me/tcg_stock_alerts").
+                  // @tcg_stock_alerts_bot is a bot, not a channel — a bot link
+                  // opens a chat nothing answers, so it stays hidden until a
+                  // channel exists and TELEGRAM_CHAT_ID points at it.
 };
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -225,12 +230,11 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
 function setLinks(){
   for (const [k, url] of Object.entries(LINKS)){
     const node = el(k === "discord" ? "joinDiscord" : "joinTelegram");
-    if (url) { node.href = url; }
-    else { node.href = "#"; node.setAttribute("aria-disabled","true");
-           node.textContent = k === "discord" ? "Discord — opening shortly" : "Telegram — opening shortly";
-           node.style.opacity = ".55"; node.style.cursor = "not-allowed";
-           node.addEventListener("click", e => e.preventDefault()); }
+    if (url) { node.href = url; node.hidden = false; }
+    else { node.hidden = true; }   // hide rather than show a dead button
   }
+  const rail = el("railJoin"), primary = LINKS.discord || LINKS.telegram;
+  if (primary) { rail.href = primary; } else { rail.hidden = true; }
 }
 
 const TAG = {RESTOCK:["rs","RESTOCK"], PRICE_DROP:["pd","PRICE DROP"], NEW_PREORDER:["pre","PREORDER"]};
