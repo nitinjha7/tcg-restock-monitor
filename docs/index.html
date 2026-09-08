@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCG Stock Board — live sealed restocks across 13 card shops</title>
+<meta name="description" content="Live board of sealed TCG stock — booster boxes, ETBs and bundles — across 13 independent card shops in the UK, EU, US and Canada. Restocks and price drops, checked every minute.">
+<meta property="og:title" content="TCG Stock Board">
+<meta property="og:description" content="Sealed restocks and price drops across 13 independent card shops. Checked every minute.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --ink:#10131A; --board:#191E29; --rule:#242B3A;
+  --chalk:#F2F3F0; --dim:#7C8598;
+  --signal:#FFB627; --drop:#FF5C7A;
+  --pad:clamp(16px,4vw,40px);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--ink); color:var(--chalk);
+  font-family:Archivo,'Helvetica Neue',Arial,sans-serif;
+  font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+.num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--pad)}
+
+/* ── top rail ─────────────────────────────────────────── */
+.rail{
+  border-bottom:1px solid var(--rule); position:sticky; top:0; z-index:20;
+  background:rgba(16,19,26,.92); backdrop-filter:blur(8px);
+}
+.rail .wrap{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+.mark{font-weight:800;letter-spacing:-.015em;font-size:19px}
+.mark b{color:var(--signal);font-weight:800}
+.status{margin-left:auto;color:var(--dim);font-size:13px;display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--signal);flex:none}
+
+/* ── hero: the board itself ───────────────────────────── */
+.hero{padding:clamp(30px,6vw,58px) 0 clamp(24px,4vw,38px)}
+.lede{font-size:clamp(26px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;font-weight:800;max-width:19ch;margin:0}
+.sub{color:var(--dim);max-width:56ch;margin:16px 0 0;font-size:clamp(15px,1.6vw,17px)}
+
+.board{margin-top:clamp(24px,4vw,36px);border:1px solid var(--rule);background:var(--board)}
+.board-head{
+  display:flex;align-items:baseline;gap:12px;padding:12px 16px;
+  border-bottom:1px solid var(--rule);font-size:13px;color:var(--dim);
+}
+.board-head strong{color:var(--chalk);font-weight:600;font-size:14px}
+.ev{display:grid;grid-template-columns:64px 92px 1fr auto;gap:14px;align-items:baseline;
+    padding:13px 16px;border-bottom:1px solid var(--rule);text-decoration:none}
+.ev:last-child{border-bottom:0}
+.ev:hover,.ev:focus-visible{background:#1E2534;outline:none}
+.ev:focus-visible{box-shadow:inset 3px 0 0 var(--signal)}
+.ev time{color:var(--dim);font-size:12.5px}
+.tag{font-size:11.5px;font-weight:600;letter-spacing:.04em}
+.tag.rs{color:var(--signal)} .tag.pd{color:var(--drop)} .tag.pre{color:#7FD1FF}
+.ev-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px}
+.ev-s{color:var(--dim);font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-p{text-align:right;font-size:14.5px;white-space:nowrap}
+.was{color:var(--dim);text-decoration:line-through;margin-right:6px;font-size:12.5px}
+.off{color:var(--drop)}
+@keyframes land{from{background:#3A2E12}to{background:transparent}}
+.land{animation:land 1.6s ease-out}
+@media (prefers-reduced-motion:reduce){.land{animation:none}}
+
+/* ── call to action ───────────────────────────────────── */
+.cta{margin:clamp(26px,4vw,38px) 0 0;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{
+  display:inline-block;padding:13px 22px;border:1px solid var(--signal);
+  background:var(--signal);color:#151006;font-weight:600;text-decoration:none;font-size:15px;
+}
+.btn:hover{background:#FFC44D}
+.btn.ghost{background:transparent;color:var(--chalk);border-color:var(--rule)}
+.btn.ghost:hover{border-color:var(--dim)}
+.btn:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+.cta small{color:var(--dim);font-size:13px}
+
+/* ── stock section ────────────────────────────────────── */
+.sec{padding:clamp(40px,7vw,72px) 0 0}
+.sec-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:12px}
+.sec-h h2{font-size:clamp(19px,2.4vw,24px);margin:0;letter-spacing:-.02em;font-weight:800}
+.sec-h span{color:var(--dim);font-size:13.5px}
+
+.tools{display:flex;gap:10px;flex-wrap:wrap;padding:16px 0}
+.tools input,.tools select{
+  font:inherit;font-size:14px;background:var(--board);color:var(--chalk);
+  border:1px solid var(--rule);padding:9px 12px;min-width:0;
+}
+.tools input{flex:1 1 220px}
+.tools input:focus,.tools select:focus{outline:none;border-color:var(--signal)}
+
+.rows{border-top:1px solid var(--rule)}
+.row{display:grid;grid-template-columns:44px 1fr 150px auto;gap:14px;align-items:center;
+     padding:11px 4px;border-bottom:1px solid var(--rule);text-decoration:none}
+.row:hover,.row:focus-visible{background:var(--board);outline:none}
+.row:focus-visible{box-shadow:inset 3px 0 0 var(--signal)}
+.row img{width:44px;height:44px;object-fit:contain;background:#0C0F15;flex:none}
+.row .t{min-width:0;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .g{color:var(--dim);font-size:12.5px}
+.row .shop{color:var(--dim);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .p{text-align:right;font-size:15px;color:var(--signal);white-space:nowrap}
+.row .p em{font-style:normal;color:#7FD1FF;font-size:12px;display:block}
+.more{display:block;width:100%;margin:22px 0 0;padding:13px;background:transparent;
+      border:1px solid var(--rule);color:var(--chalk);font:inherit;font-size:14px;cursor:pointer}
+.more:hover{border-color:var(--dim)}
+.empty{padding:40px 4px;color:var(--dim)}
+
+/* ── explainer + footer ───────────────────────────────── */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:clamp(20px,3vw,40px);
+      padding:clamp(40px,7vw,72px) 0 0}
+.cols h3{font-size:15px;margin:0 0 8px;font-weight:600}
+.cols p{margin:0;color:var(--dim);font-size:14px;max-width:44ch}
+footer{margin-top:clamp(40px,7vw,72px);border-top:1px solid var(--rule);padding:22px 0 44px;
+       color:var(--dim);font-size:13px;display:flex;gap:16px;flex-wrap:wrap}
+
+@media (max-width:640px){
+  .ev{grid-template-columns:76px 1fr auto;gap:10px}
+  .ev time{display:none}
+  .row{grid-template-columns:36px 1fr auto;gap:10px}
+  .row img{width:36px;height:36px}
+  .row .shop{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="rail">
+  <div class="wrap">
+    <span class="mark">TCG <b>Stock Board</b></span>
+    <span class="status"><span class="dot" id="dot"></span><span id="freshness">loading…</span></span>
+  </div>
+</header>
+
+<main>
+<section class="wrap hero">
+  <h1 class="lede">Sealed stock, the minute it moves.</h1>
+  <p class="sub">Booster boxes, ETBs and bundles across 13 independent card shops in the UK, EU, US and Canada — checked every minute. The restocks the big US monitors don't watch.</p>
+
+  <div class="board">
+    <div class="board-head"><strong>Latest movements</strong> <span id="evcount"></span></div>
+    <div id="events"><div class="empty">Loading the board…</div></div>
+  </div>
+
+  <div class="cta">
+    <a class="btn" id="joinDiscord" href="#">Get alerts free on Discord</a>
+    <a class="btn ghost" id="joinTelegram" href="#">Telegram channel</a>
+    <small>Every restock and price drop, sent the moment it's found.</small>
+  </div>
+</section>
+
+<section class="wrap sec">
+  <div class="sec-h">
+    <h2>In stock right now</h2>
+    <span id="stockcount"></span>
+  </div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search a set, box or shop…" aria-label="Search stock">
+    <select id="game" aria-label="Filter by game"><option value="">All games</option></select>
+    <select id="shop" aria-label="Filter by shop"><option value="">All shops</option></select>
+    <select id="sort" aria-label="Sort">
+      <option value="hi">Price: high to low</option>
+      <option value="lo">Price: low to high</option>
+      <option value="az">Name A–Z</option>
+    </select>
+  </div>
+  <div class="rows" id="stock"></div>
+  <button class="more" id="more" hidden>Show more</button>
+</section>
+
+<section class="wrap cols">
+  <div>
+    <h3>What it watches</h3>
+    <p>Sealed product only — booster boxes, cases, elite trainer boxes, bundles, tins and starter decks. Singles, graded slabs and accessories are filtered out.</p>
+  </div>
+  <div>
+    <h3>Where the alerts come from</h3>
+    <p>Independent shops across the UK, EU, US and Canada, including Japanese and Korean imports. Pokémon, One Piece, Lorcana, Yu-Gi-Oh!, Gundam, Union Arena and Riftbound.</p>
+  </div>
+  <div>
+    <h3>What you pay</h3>
+    <p>Nothing. The feed is free and open. Prices shown are what the shop listed when it was last checked — always confirm on the shop's own page.</p>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <span>Not affiliated with any shop, publisher or card game.</span>
+  <span id="tracked"></span>
+</footer>
+
+<script>
+// ─── Fill these in once the channels exist ───────────────────────────────
+const LINKS = {
+  discord:  "",   // e.g. "https://discord.gg/xxxxxxx"
+  telegram: ""    // e.g. "https://t.me/yourchannel"
+};
+// ─────────────────────────────────────────────────────────────────────────
+
+const SYM = {GBP:"£", USD:"$", EUR:"€", CAD:"CA$", AUD:"A$"};
+const money = (c,v) => (SYM[c]||"") + v.toFixed(2);
+const el = id => document.getElementById(id);
+
+function ago(iso){
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (!isFinite(s) || s < 0) return "just now";
+  if (s < 90) return "just now";
+  if (s < 5400) return Math.round(s/60) + "m ago";
+  if (s < 172800) return Math.round(s/3600) + "h ago";
+  return Math.round(s/86400) + "d ago";
+}
+function hhmm(iso){
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function setLinks(){
+  for (const [k, url] of Object.entries(LINKS)){
+    const node = el(k === "discord" ? "joinDiscord" : "joinTelegram");
+    if (url) { node.href = url; }
+    else { node.href = "#"; node.setAttribute("aria-disabled","true");
+           node.textContent = k === "discord" ? "Discord — opening shortly" : "Telegram — opening shortly";
+           node.style.opacity = ".55"; node.style.cursor = "not-allowed";
+           node.addEventListener("click", e => e.preventDefault()); }
+  }
+}
+
+const TAG = {RESTOCK:["rs","RESTOCK"], PRICE_DROP:["pd","PRICE DROP"], NEW_PREORDER:["pre","PREORDER"]};
+
+function renderEvents(list){
+  const box = el("events");
+  if (!list.length){
+    box.innerHTML = '<div class="empty">No movements recorded yet. The board fills as shops restock.</div>';
+    return;
+  }
+  box.innerHTML = list.slice(0, 12).map(e => {
+    const [cls, label] = TAG[e.type] || ["rs", e.type];
+    let price = '<span class="num">' + esc(money(e.currency, e.price)) + "</span>";
+    if (e.type === "PRICE_DROP" && e.old_price){
+      const off = Math.round((1 - e.price / e.old_price) * 100);
+      price = '<span class="was num">' + esc(money(e.currency, e.old_price)) + "</span>" + price +
+              ' <span class="off num">−' + off + "%</span>";
+    }
+    return '<a class="ev land" href="' + esc(e.url) + '" target="_blank" rel="noopener nofollow">' +
+      '<time class="num">' + hhmm(e.at) + "</time>" +
+      '<span class="tag ' + cls + '">' + label + "</span>" +
+      '<span class="ev-t">' + esc(e.title) + '<span class="ev-s">' + esc(e.store) + "</span></span>" +
+      '<span class="ev-p">' + price + "</span></a>";
+  }).join("");
+  el("evcount").textContent = list.length + " in the last few days";
+}
+
+let STOCK = [], shown = 0;
+const PAGE = 60;
+
+function filtered(){
+  const q = el("q").value.trim().toLowerCase();
+  const g = el("game").value, s = el("shop").value, sort = el("sort").value;
+  let out = STOCK.filter(r =>
+    (!g || r.g === g) && (!s || r.s === s) &&
+    (!q || (r.t + " " + r.s).toLowerCase().includes(q)));
+  if (sort === "lo") out = out.slice().sort((a,b) => a.p - b.p);
+  else if (sort === "az") out = out.slice().sort((a,b) => a.t.localeCompare(b.t));
+  return out;
+}
+
+function renderStock(reset){
+  const list = filtered();
+  if (reset) shown = 0;
+  shown = Math.min(list.length, shown + PAGE);
+  el("stockcount").textContent = list.length.toLocaleString() + " items";
+  const box = el("stock");
+  if (!list.length){
+    box.innerHTML = '<div class="empty">Nothing matches that. Try a shorter search, or clear the filters.</div>';
+    el("more").hidden = true;
+    return;
+  }
+  box.innerHTML = list.slice(0, shown).map(r =>
+    '<a class="row" href="' + esc(r.u) + '" target="_blank" rel="noopener nofollow">' +
+      (r.i ? '<img src="' + esc(r.i) + '" alt="" loading="lazy">' : '<img alt="">') +
+      '<span class="t">' + esc(r.t) + (r.g ? '<span class="g"> · ' + esc(r.g) + "</span>" : "") + "</span>" +
+      '<span class="shop">' + esc(r.s) + "</span>" +
+      '<span class="p num">' + esc(money(r.c, r.p)) + (r.pre ? "<em>preorder</em>" : "") + "</span>" +
+    "</a>").join("");
+  el("more").hidden = shown >= list.length;
+  el("more").textContent = "Show more (" + (list.length - shown).toLocaleString() + " left)";
+}
+
+function fillSelect(id, values){
+  const sel = el(id);
+  values.filter(Boolean).sort().forEach(v => {
+    const o = document.createElement("option");
+    o.value = o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+fetch("feed.json", {cache:"no-store"})
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(d => {
+    el("freshness").textContent = "13 shops · checked " + ago(d.generated_at);
+    el("tracked").textContent = (d.tracked || 0).toLocaleString() + " sealed products tracked";
+    renderEvents(d.recent || []);
+    STOCK = d.stock || [];
+    fillSelect("game", [...new Set(STOCK.map(r => r.g))]);
+    fillSelect("shop", [...new Set(STOCK.map(r => r.s))]);
+    renderStock(true);
+  })
+  .catch(() => {
+    el("dot").style.background = "var(--drop)";
+    el("freshness").textContent = "board unavailable";
+    el("events").innerHTML = '<div class="empty">The board can\'t be reached right now. Refresh in a minute.</div>';
+    el("stock").innerHTML = '<div class="empty">Stock list unavailable.</div>';
+  });
+
+["q","game","shop","sort"].forEach(id => el(id).addEventListener("input", () => renderStock(true)));
+el("more").addEventListener("click", () => renderStock(false));
+setLinks();
+</script>
+</body>
+</html>

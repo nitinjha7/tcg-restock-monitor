@@ -238,7 +238,13 @@ def fetch_store(store: dict) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 STATE_FILE = "state.json"
-_DEFAULT_STATE = {"products": {}, "delayed_queue": [], "known_product_ids": [], "alert_cooldowns": {}}
+# Rolling log of fired alerts. This is the proprietary dataset the public site and
+# any future SEO pages are built from — nobody else has restock history for these
+# shops. Capped so state.json stays small enough to commit every 20 min.
+RECENT_EVENTS_CAP = 300
+
+_DEFAULT_STATE = {"products": {}, "delayed_queue": [], "known_product_ids": [],
+                  "alert_cooldowns": {}, "recent_events": []}
 
 
 def load_state() -> dict:
@@ -585,7 +591,7 @@ def commit_state() -> None:
     if not os.environ.get("GITHUB_ACTIONS"):
         return
     try:
-        subprocess.run(["git", "add", STATE_FILE], check=True)
+        subprocess.run(["git", "add", STATE_FILE, "docs"], check=True)
         if subprocess.run(["git", "diff", "--cached", "--quiet"]).returncode != 0:
             subprocess.run(["git", "commit", "-m", "update state [skip ci]"], check=True)
             subprocess.run(["git", "push"], check=True)
@@ -607,6 +613,73 @@ def prune_cooldowns(state: dict) -> None:
     state["alert_cooldowns"] = kept
 
 
+PUBLIC_FEED_FILE = os.path.join("docs", "feed.json")
+
+
+def collect_stock(store: dict, sealed: list[dict]) -> list[dict]:
+    """Compact in-stock rows for the public site, one per available product."""
+    domain = store["domain"]
+    rows = []
+    for product in sealed:
+        variants = product.get("variants", [])
+        avail = [v for v in variants if v.get("available")]
+        if not avail:
+            continue
+        try:
+            price = min(float(v.get("price", "0")) for v in avail)
+        except (ValueError, TypeError):
+            continue
+        images = product.get("images", [])
+        title = product.get("title", "")
+        rows.append({
+            "t": title[:140],
+            "s": store["name"],
+            "u": affiliate_url(domain, f"https://{domain}/products/{product.get('handle','')}"),
+            "p": round(price, 2),
+            "c": _STORE_CURRENCY.get(domain, "USD"),
+            "g": detect_game(title)[0],
+            "i": (images[0].get("src", "") if images else "")[:200],
+            "pre": is_preorder(product),
+        })
+    return rows
+
+
+def write_public_feed(state: dict, stores: list, stock_rows: list[dict]) -> None:
+    """Publish the small JSON the public site reads. Best-effort: never break a cycle."""
+    try:
+        os.makedirs("docs", exist_ok=True)
+        stock_rows.sort(key=lambda r: -r["p"])
+        payload = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "stores": [{"name": s["name"], "currency": s.get("currency", "USD")} for s in stores],
+            "tracked": len(state["products"]),
+            "stock": stock_rows,
+            "recent": state.get("recent_events", [])[:120],
+        }
+        with open(PUBLIC_FEED_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, separators=(",", ":"), ensure_ascii=False)
+    except Exception as exc:
+        print(f"  [WARN] public feed write failed: {exc}")
+
+
+def record_event(state: dict, event: dict) -> None:
+    """Append a fired alert to the rolling public log (newest first)."""
+    domain = event["domain"]
+    state["recent_events"].insert(0, {
+        "type": event["type"],
+        "title": event["title"],
+        "store": event["store_name"],
+        "price": event["price"],
+        "old_price": event.get("old_price"),
+        "currency": _STORE_CURRENCY.get(domain, "USD"),
+        "url": affiliate_url(domain, f"https://{domain}/products/{event['handle']}"),
+        "image": event.get("image_url", ""),
+        "game": detect_game(event["title"])[0],
+        "at": datetime.now(timezone.utc).isoformat(),
+    })
+    del state["recent_events"][RECENT_EVENTS_CAP:]
+
+
 def run_once(stores: list, state: dict, known_ids: set,
              live_url: str, free_url: str) -> tuple[int, int]:
     """One full polling cycle: fetch all stores, detect events, alert, save.
@@ -617,6 +690,7 @@ def run_once(stores: list, state: dict, known_ids: set,
     """
     first_run = not state["products"]
     all_events: list[dict] = []
+    stock_rows: list[dict] = []
     total_sealed = 0
 
     for i, store in enumerate(stores):
@@ -633,6 +707,7 @@ def run_once(stores: list, state: dict, known_ids: set,
                 store["domain"], name, sealed, state, known_ids, emit=not first_run
             )
             all_events.extend(events)
+            stock_rows.extend(collect_stock(store, sealed))
         except Exception as exc:
             print(f"  [ERROR] {name}: {exc}")
 
@@ -653,6 +728,7 @@ def run_once(stores: list, state: dict, known_ids: set,
                 enqueue_alert(state, embed)
             # Fan out live to every configured public channel (grows the audience).
             broadcast.broadcast_all(build_broadcast_post(event, embed))
+            record_event(state, event)
             if len(all_events) > 1:
                 time.sleep(ALERT_SEND_GAP_SECS)
 
@@ -661,6 +737,7 @@ def run_once(stores: list, state: dict, known_ids: set,
 
     prune_cooldowns(state)
     save_state(state)
+    write_public_feed(state, stores, stock_rows)
     return len(all_events), total_sealed
 
 
