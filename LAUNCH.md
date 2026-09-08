@@ -68,12 +68,9 @@ doesn't support it and people will notice.
 The board is live at **https://tcgstockboard.github.io/** and the Discord join button is
 wired to the TCG Alerts `#free-feed` invite. Only Telegram is outstanding.
 
-### 1a. Telegram (5 min — do this first, it's the easiest to grow)
-1. Message **@BotFather** → `/newbot` → copy the **bot token**.
-2. Create a **public channel** (e.g. `@tcgstockboard`). Add the bot as **admin** with
-   *Post Messages*.
-3. Add repo secrets (Settings → Secrets and variables → Actions):
-   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (use `@yourchannel`).
+### 1a. Telegram — done
+Public channel **https://t.me/tcgstockboard**, `@tcg_stock_alerts_bot` posting as admin.
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` are set and the board links to it.
 
 ### 1b. Discord — done
 Server `TCG Alerts` with `#free-feed` and `#paid-alerts`, both webhooks live since 2026-06-29.
