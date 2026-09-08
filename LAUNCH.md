@@ -65,8 +65,8 @@ doesn't support it and people will notice.
 
 ## Step 1 — You, ~20 minutes. This is the only thing blocking everything else.
 
-Nothing below can start until these exist. The board is live at
-**https://nitinjha7.github.io/tcg-restock-monitor/** but both join buttons are dead.
+The board is live at **https://tcgstockboard.github.io/** and the Discord join button is
+wired to the TCG Alerts `#free-feed` invite. Only Telegram is outstanding.
 
 ### 1a. Telegram (5 min — do this first, it's the easiest to grow)
 1. Message **@BotFather** → `/newbot` → copy the **bot token**.
@@ -75,14 +75,14 @@ Nothing below can start until these exist. The board is live at
 3. Add repo secrets (Settings → Secrets and variables → Actions):
    `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (use `@yourchannel`).
 
-### 1b. Public Discord (10 min)
-1. Create a server. One channel, `#restocks`. Make a **permanent, non-expiring invite**.
-2. Channel → Edit → Integrations → Webhooks → New Webhook → copy URL.
-3. Add repo secret `DISCORD_WEBHOOK_PUBLIC`.
+### 1b. Discord — done
+Server `TCG Alerts` with `#free-feed` and `#paid-alerts`, both webhooks live since 2026-06-29.
+Invite `https://discord.gg/dCrGMB52BE` is wired into the board.
 
-### 1c. Send me two links
-The public **Discord invite** and the **Telegram channel URL**. I'll wire them into the site's
-join buttons, which are currently disabled placeholders.
+**Outstanding:** during the growth phase, set `DISCORD_WEBHOOK_PUBLIC` to the `#free-feed`
+webhook and remove `DISCORD_WEBHOOK_FREE`. That makes the free feed instant instead of 24h
+delayed — the delay protects a paid tier that has no customers yet, and gives every new joiner
+a first impression of day-old, already-sold-out alerts. Reverse it when paid launches.
 
 Full per-channel detail is in `BROADCAST_SETUP.md`. Bluesky and Mastodon are worth adding later
 but are not on the critical path.
