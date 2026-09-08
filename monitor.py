@@ -15,7 +15,8 @@ import broadcast
 # ---------------------------------------------------------------------------
 
 MIN_PRICE = 15.0
-MIN_DROP_PCT = 5.0               # only alert price drops of at least this % (cuts noise)
+MIN_DROP_PCT = 10.0              # only alert price drops of at least this % (5-9% moves were 45%
+                                 # of all drops and are rarely actionable — verified over 70d of history)
 DELAY_HOURS = 24
 MAX_PAGES = 3
 STORE_DELAY_SECS = 1.5
@@ -64,11 +65,11 @@ EXCLUDE_TYPES = {
 }
 
 EXCLUDE_TITLE_FRAGMENTS = [
-    "psa ", "cgc ", "ace ", "slab", " foil", "art rare",
+    "psa ", "cgc ", "ace grading", "ace graded", "slab", " foil", "art rare",
     "/165", "/193", "/217", "/078",
     "funko", "pop!", "nendoroid", "warhammer", "games workshop",
     "astra militarum", "battleforce", "dragon shield", "ultra pro",
-    "deck box", "playmat", "sleeve",
+    "deck box", "playmat", "sleeves",
     "event entry", "draft entry", "event reservation", "tournament",
     "damaged", "[damaged]",
 ]
