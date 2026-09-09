@@ -86,31 +86,74 @@ but are not on the critical path.
 
 ---
 
-## Step 2 — Your 3–5 hrs/week, weeks 1–8
+## Step 2 — Getting to 300 members
 
-The goal is **300 free members**. That is the number that makes a paid tier viable.
+**Recruit distributors, not members.** Converting 300 people one at a time is the slowest
+path with the lowest ceiling. Five server owners saying yes gets you there faster than five
+hundred individual pitches. The official One Piece Card Game Discord alone has ~107,000
+members, in a game the big Pokemon monitors don't cover.
 
-**The rule that keeps you alive:** never cold-drop a Discord invite. Most TCG communities ban
-it on sight, and a banned account ends the project. Link the **site**, not the server — a free
-public tool is tolerated where a server ad is not. Read each community's rules before posting;
-I could not verify them individually.
+### 2a. Feed syndication — the highest-leverage play
 
-**Weekly rhythm:**
+Every TCG Discord wants a `#deals` channel with real content and has nobody to staff it. You
+have a live feed. `DISCORD_WEBHOOK_PUBLIC` now accepts **multiple webhooks** (comma- or
+whitespace-separated), so onboarding a partner server is one config change.
 
-| Time | What |
-|---|---|
-| ~2 hrs | Genuinely participate in TCG communities — answer "where can I buy X at RRP" questions with a real, specific answer. Link the board only when it directly answers the question. |
-| ~1 hr | Post one genuinely useful thing: "Korean booster boxes back in stock at 4 shops this week", with the data. Not an ad. |
-| ~30 min | List the Discord on **Disboard** and **Discadia** and bump manually. Never use auto-bump bots — they are against ToS and get servers banned. |
-| ~30 min | Reply to everyone who joins. Early members who feel heard are what makes this spread. |
+The pitch — sent to a server owner or mod, not posted publicly:
 
-**Best-fit communities** (verify rules yourself before posting): One Piece TCG, Union Arena,
-Lorcana and Japanese-import collector communities — you have real coverage there and almost no
-competition, unlike Pokémon where the 96k server dominates.
+> I run a sealed-restock monitor across 13 independent shops — Japanese/Korean/Chinese
+> imports, One Piece, Union Arena, Lorcana, plus Pokemon. Roughly 12 alerts a day with live
+> prices and buy links. I'd like to pipe it into your server free, live. It's one webhook,
+> zero work for you, and your members get restock alerts nobody else is posting. All I ask
+> is a credit line in the channel topic.
 
-**Never:** mass-DM, scrape members from other servers, buy followers, or spam subreddits.
+Give first, ask nothing beyond attribution. Naive "let's cross-promote" requests are ignored;
+a free working feed is not. One 2,000-member server converting at 2–5% is 40–100 members, so
+**five yeses clears 300**.
 
----
+To add a partner: append their webhook URL to the `DISCORD_WEBHOOK_PUBLIC` secret, separated
+by a space or comma. A dead partner webhook warns and is skipped — it never blocks the others.
+
+### 2b. Measure it, don't guess
+
+Discord reports **uses per invite link**. Create a separate never-expiring invite for every
+source — Reddit, Telegram, the board, and one per partner server — then Server Settings →
+Invites shows exactly where members come from.
+
+Within two weeks you'll know which channel works and can stop doing the rest. Without this
+you're guessing, and guessing is how the 3–5 hrs/week gets wasted.
+
+### 2c. Publish the data, not the service
+
+"Join my Discord" is removed as spam. A genuine finding is upvoted, and the board link becomes
+a citation rather than an ad. You have 70 days of restock history across 13 shops that nobody
+else has — that is publishable content:
+
+- "I tracked every Korean booster box across 13 UK/EU shops for 70 days — here's where they're
+  actually cheapest"
+- "Which sealed products restock most often, and which never come back"
+- "What Chinese-language slim booster boxes actually cost across 4 shops"
+
+### 2d. Directory listings — passive and permanent
+
+List the server on **Disboard**, **Discadia**, **Top.gg** and **Discord.me**. These rank on
+Google for searches like "TCG restock discord" that your own site won't touch for months —
+you're borrowing their domain authority. Write a real description with keywords, add a banner
+and icon, and bump manually. **Never use auto-bump bots** — against ToS, and they get servers
+banned.
+
+### 2e. Be the answer to the recurring question
+
+Every TCG community has someone asking weekly "where can I still get X at RRP?" You can answer
+that with live, correct, specific data. That is being useful, not promoting, and it's the only
+form of self-promotion these communities reliably tolerate. Read each community's rules first;
+they vary and I could not verify them individually.
+
+**Best-fit targets** — where you're differentiated and the 96k Pokemon server isn't competing:
+One Piece TCG, Union Arena, Lorcana, and Japanese/Korean/Chinese import collector communities.
+
+**Never:** mass-DM, scrape members from other servers, buy followers, or spam subreddits. A ban
+ends the project.
 
 ## Step 3 — Charge (once ~300 free members, realistically week 8–12)
 

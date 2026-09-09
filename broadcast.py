@@ -7,7 +7,8 @@ blocks the other channels or the monitor loop.
 
 Channels (all optional, activate by setting the secrets):
   - Telegram        TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-  - Public Discord  DISCORD_WEBHOOK_PUBLIC
+  - Public Discord  DISCORD_WEBHOOK_PUBLIC (one URL, or several comma/newline
+                    separated to syndicate the feed into partner servers)
   - Bluesky         BLUESKY_HANDLE, BLUESKY_APP_PASSWORD
   - Mastodon        MASTODON_INSTANCE, MASTODON_TOKEN
   - X / Twitter     X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET
@@ -79,13 +80,36 @@ def _telegram(post: dict) -> bool:
 # Public Discord feed  (reuse the rich embed already built for the owner alert)
 # ---------------------------------------------------------------------------
 
+def _public_webhooks() -> list[str]:
+    """Every Discord webhook the feed syndicates to.
+
+    DISCORD_WEBHOOK_PUBLIC holds one URL or several separated by commas or
+    newlines: our own #free-feed plus a webhook per partner server that has
+    agreed to carry the feed. Syndication is the cheapest distribution we have
+    — one partner server reaches more people than weeks of manual posting.
+    """
+    raw = os.environ.get("DISCORD_WEBHOOK_PUBLIC", "")
+    # commas or any whitespace separate entries; webhook URLs contain neither
+    return [u for u in raw.replace(",", " ").split() if u]
+
+
 def _discord_public(post: dict) -> bool:
-    url = os.environ.get("DISCORD_WEBHOOK_PUBLIC")
+    """Post to every syndication webhook. One dead partner never blocks the rest."""
     embed = post.get("embed")
-    if not (url and embed):
+    urls = _public_webhooks()
+    if not (urls and embed):
         return False
-    r = httpx.post(url, json={"embeds": [embed]}, timeout=TIMEOUT)
-    return r.status_code in (200, 204)
+    sent = 0
+    for url in urls:
+        try:
+            r = httpx.post(url, json={"embeds": [embed]}, timeout=TIMEOUT)
+            if r.status_code in (200, 204):
+                sent += 1
+            else:
+                print(f"  [WARN] discord syndication {r.status_code} for ...{url[-8:]}")
+        except Exception as exc:
+            print(f"  [WARN] discord syndication error for ...{url[-8:]}: {exc}")
+    return sent > 0
 
 
 # ---------------------------------------------------------------------------
@@ -207,7 +231,7 @@ def configured_channels() -> list[str]:
     """Names of channels that have their secrets set (for startup logging)."""
     checks = {
         "telegram": bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")),
-        "discord": bool(os.environ.get("DISCORD_WEBHOOK_PUBLIC")),
+        "discord": bool(_public_webhooks()),
         "bluesky": bool(os.environ.get("BLUESKY_HANDLE") and os.environ.get("BLUESKY_APP_PASSWORD")),
         "mastodon": bool(os.environ.get("MASTODON_INSTANCE") and os.environ.get("MASTODON_TOKEN")),
         "x": bool(os.environ.get("X_API_KEY") and os.environ.get("X_ACCESS_TOKEN")),
